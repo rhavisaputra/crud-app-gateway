@@ -1,0 +1,56 @@
+http:
+  hostname: localhost
+  port: 8003
+admin:
+  host: localhost
+  port: 9876
+apiEndpoints:
+  crudApi:
+    host: localhost
+    paths: 
+      - '/mysql/*'
+      - '/postgresql/*'
+serviceEndpoints:
+  crudService:
+    url: 'http://localhost:8002'
+policies:
+  - basic-auth
+  - cors
+  - expression
+  - key-auth
+  - log
+  - oauth2
+  - proxy
+  - rate-limit
+pipelines:
+  crudPipeline:
+    apiEndpoints:
+      - crudApi
+    policies:
+      - cors:
+        - action:
+            origin: '*'
+            methods: 'POST,GET,PUT,DELETE'
+      - log:
+        # - 
+        #   condition:
+        #     name: method
+        #     methods: PUT
+        #   action:
+        #     message: "--> EXECUTE UPDATE <--"
+        - 
+          action:
+            message: ${req.method} ${req.originalUrl}
+      # - rate-limit:
+      #   - condition:
+      #       name: method
+      #       methods: DELETE
+      #     action:
+      #       max: 1
+      #       windowMs: 60000
+      #       rateLimitBy: "${req.hostname}"
+      # - key-auth: 
+      - proxy:
+        - action:
+            serviceEndpoint: crudService
+            changeOrigin: true
